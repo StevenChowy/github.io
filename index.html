@@ -1,0 +1,1090 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PetPals - 宠物社交平台</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.8/dist/chart.umd.min.js"></script>
+  
+  <!-- Tailwind配置 -->
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            primary: '#4CAF50',
+            secondary: '#FF9800',
+            accent: '#2196F3',
+            dark: '#333333',
+            light: '#F5F5F5'
+          },
+          fontFamily: {
+            sans: ['Inter', 'system-ui', 'sans-serif'],
+          },
+        },
+      }
+    }
+  </script>
+  
+  <style type="text/tailwindcss">
+    @layer utilities {
+      .content-auto {
+        content-visibility: auto;
+      }
+      .text-shadow {
+        text-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      }
+      .card-hover {
+        @apply transition-all duration-300 hover:shadow-lg hover:-translate-y-1;
+      }
+      .tab-active {
+        @apply border-b-2 border-primary text-primary;
+      }
+    }
+  </style>
+</head>
+
+<body class="bg-gray-50 font-sans">
+  <!-- 顶部导航栏 -->
+  <header class="fixed top-0 left-0 right-0 bg-white shadow-sm z-50 transition-all duration-300" id="mainHeader">
+    <div class="container mx-auto px-4">
+      <div class="flex items-center justify-between h-16">
+        <!-- Logo -->
+        <div class="flex items-center">
+          <a href="#" class="flex items-center">
+            <i class="fa fa-paw text-primary text-2xl mr-2"></i>
+            <span class="text-xl font-bold text-dark">PetPals</span>
+          </a>
+        </div>
+        
+        <!-- 搜索栏 - 仅在中等屏幕及以上显示 -->
+        <div class="hidden md:block flex-1 max-w-md mx-8">
+          <div class="relative">
+            <input type="text" placeholder="搜索宠物、主人或话题..." 
+                   class="w-full pl-10 pr-4 py-2 rounded-full border border-gray-200 focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all">
+            <i class="fa fa-search absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
+          </div>
+        </div>
+        
+        <!-- 导航菜单 -->
+        <nav class="hidden md:flex items-center space-x-6">
+          <a href="#home" class="text-gray-600 hover:text-primary transition-colors">首页</a>
+          <a href="#discover" class="text-gray-600 hover:text-primary transition-colors">发现</a>
+          <a href="#encyclopedia" class="text-gray-600 hover:text-primary transition-colors">宠物百科</a>
+          <a href="#community" class="text-gray-600 hover:text-primary transition-colors">社区</a>
+        </nav>
+        
+        <!-- 用户菜单 -->
+        <div class="flex items-center space-x-4">
+          <button class="relative text-gray-600 hover:text-primary transition-colors">
+            <i class="fa fa-bell-o text-xl"></i>
+            <span class="absolute top-0 right-0 h-2 w-2 rounded-full bg-red-500"></span>
+          </button>
+          <div class="relative group">
+            <button class="flex items-center space-x-2 focus:outline-none">
+              <img src="https://picsum.photos/id/64/40/40" alt="用户头像" class="h-8 w-8 rounded-full object-cover border-2 border-primary">
+              <span class="hidden md:inline text-sm font-medium">李小花</span>
+              <i class="fa fa-angle-down text-xs"></i>
+            </button>
+            <div class="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg py-2 z-50 hidden group-hover:block transition-all duration-300 transform origin-top-right scale-95 opacity-0 group-hover:scale-100 group-hover:opacity-100">
+              <a href="#profile" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">个人资料</a>
+              <a href="#settings" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">设置</a>
+              <a href="#help" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">帮助中心</a>
+              <div class="border-t border-gray-100 my-1"></div>
+              <a href="#logout" class="block px-4 py-2 text-sm text-red-600 hover:bg-gray-100">退出登录</a>
+            </div>
+          </div>
+          
+          <!-- 移动端菜单按钮 -->
+          <button class="md:hidden text-gray-600 hover:text-primary transition-colors" id="mobileMenuBtn">
+            <i class="fa fa-bars text-xl"></i>
+          </button>
+        </div>
+      </div>
+    </div>
+    
+    <!-- 移动端搜索栏 -->
+    <div class="md:hidden px-4 pb-3 hidden" id="mobileSearch">
+      <div class="relative">
+        <input type="text" placeholder="搜索宠物、主人或话题..." 
+               class="w-full pl-10 pr-4 py-2 rounded-full border border-gray-200 focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all">
+        <i class="fa fa-search absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
+      </div>
+    </div>
+    
+    <!-- 移动端导航菜单 -->
+    <div class="md:hidden bg-white shadow-md rounded-b-lg mx-4 overflow-hidden transition-all duration-300 max-h-0 opacity-0" id="mobileMenu">
+      <nav class="flex flex-col">
+        <a href="#home" class="px-4 py-3 text-gray-600 hover:bg-gray-50 hover:text-primary transition-colors">
+          <i class="fa fa-home w-6"></i> 首页
+        </a>
+        <a href="#discover" class="px-4 py-3 text-gray-600 hover:bg-gray-50 hover:text-primary transition-colors">
+          <i class="fa fa-compass w-6"></i> 发现
+        </a>
+        <a href="#encyclopedia" class="px-4 py-3 text-gray-600 hover:bg-gray-50 hover:text-primary transition-colors">
+          <i class="fa fa-book w-6"></i> 宠物百科
+        </a>
+        <a href="#community" class="px-4 py-3 text-gray-600 hover:bg-gray-50 hover:text-primary transition-colors">
+          <i class="fa fa-users w-6"></i> 社区
+        </a>
+      </nav>
+    </div>
+  </header>
+
+  <!-- 主内容区域 -->
+  <main class="pt-20 pb-16">
+    <!-- 英雄区域 -->
+    <section id="home" class="relative bg-gradient-to-r from-primary/90 to-accent/90 text-white overflow-hidden">
+      <div class="absolute inset-0 bg-[url('https://picsum.photos/id/237/1600/800')] bg-cover bg-center opacity-20"></div>
+      <div class="container mx-auto px-4 py-16 md:py-24 relative z-10">
+        <div class="max-w-3xl">
+          <h1 class="text-[clamp(2rem,5vw,3.5rem)] font-bold leading-tight text-shadow mb-4">
+            为宠物打造的社交世界
+          </h1>
+          <p class="text-[clamp(1rem,2vw,1.25rem)] mb-8 text-white/90 max-w-xl">
+            连接宠物爱好者，分享宠物生活，探索宠物百科，找到志同道合的伙伴和宠物朋友。
+          </p>
+          <div class="flex flex-wrap gap-4">
+            <a href="#discover" class="bg-white text-primary font-medium py-3 px-6 rounded-full shadow-lg hover:shadow-xl transition-all hover:-translate-y-0.5">
+              开始探索 <i class="fa fa-arrow-right ml-2"></i>
+            </a>
+            <a href="#join" class="bg-transparent border-2 border-white text-white font-medium py-3 px-6 rounded-full hover:bg-white/10 transition-all">
+              加入我们
+            </a>
+          </div>
+        </div>
+      </div>
+      
+      <!-- 波浪底部装饰 -->
+      <div class="absolute bottom-0 left-0 right-0">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 120" class="w-full h-auto">
+          <path fill="#f9fafb" fill-opacity="1" d="M0,96L48,85.3C96,75,192,53,288,53.3C384,53,480,75,576,80C672,85,768,75,864,69.3C960,64,1056,64,1152,69.3C1248,75,1344,85,1392,90.7L1440,96L1440,120L1392,120C1344,120,1248,120,1152,120C1056,120,960,120,864,120C768,120,672,120,576,120C480,120,384,120,288,120C192,120,96,120,48,120L0,120Z"></path>
+        </svg>
+      </div>
+    </section>
+
+    <!-- 宠物动态流 -->
+    <section class="py-12 bg-gray-50">
+      <div class="container mx-auto px-4">
+        <div class="flex justify-between items-center mb-8">
+          <h2 class="text-[clamp(1.5rem,3vw,2rem)] font-bold text-dark">热门动态</h2>
+          <div class="flex space-x-2">
+            <button class="bg-white text-gray-600 hover:text-primary px-4 py-2 rounded-full shadow-sm transition-colors tab-active">
+              全部
+            </button>
+            <button class="bg-white text-gray-600 hover:text-primary px-4 py-2 rounded-full shadow-sm transition-colors">
+              狗狗
+            </button>
+            <button class="bg-white text-gray-600 hover:text-primary px-4 py-2 rounded-full shadow-sm transition-colors">
+              猫咪
+            </button>
+            <button class="bg-white text-gray-600 hover:text-primary px-4 py-2 rounded-full shadow-sm transition-colors">
+              其他
+            </button>
+          </div>
+        </div>
+        
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <!-- 动态卡片 1 -->
+          <div class="bg-white rounded-xl shadow-sm overflow-hidden card-hover">
+            <div class="relative">
+              <img src="https://picsum.photos/id/1025/600/400" alt="金毛犬在公园里玩耍" class="w-full h-48 object-cover">
+              <button class="absolute top-3 right-3 bg-white/80 hover:bg-white text-gray-600 hover:text-red-500 p-2 rounded-full transition-colors">
+                <i class="fa fa-heart-o"></i>
+              </button>
+            </div>
+            <div class="p-4">
+              <div class="flex items-center mb-3">
+                <img src="https://picsum.photos/id/64/40/40" alt="用户头像" class="w-10 h-10 rounded-full object-cover">
+                <div class="ml-3">
+                  <h3 class="font-medium text-gray-800">李小花</h3>
+                  <p class="text-xs text-gray-500">2小时前</p>
+                </div>
+                <button class="ml-auto text-gray-400 hover:text-gray-600">
+                  <i class="fa fa-ellipsis-h"></i>
+                </button>
+              </div>
+              <p class="text-gray-700 mb-3">今天带金毛去公园玩飞盘，它开心极了！大家的狗狗喜欢什么户外活动呢？</p>
+              <div class="flex items-center justify-between text-sm text-gray-500">
+                <div class="flex space-x-4">
+                  <button class="flex items-center hover:text-primary transition-colors">
+                    <i class="fa fa-heart-o mr-1"></i> 128
+                  </button>
+                  <button class="flex items-center hover:text-primary transition-colors">
+                    <i class="fa fa-comment-o mr-1"></i> 24
+                  </button>
+                  <button class="flex items-center hover:text-primary transition-colors">
+                    <i class="fa fa-share mr-1"></i> 8
+                  </button>
+                </div>
+                <div class="flex space-x-1">
+                  <span class="px-2 py-1 bg-gray-100 text-gray-600 rounded-full text-xs">狗狗</span>
+                  <span class="px-2 py-1 bg-gray-100 text-gray-600 rounded-full text-xs">公园</span>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <!-- 动态卡片 2 -->
+          <div class="bg-white rounded-xl shadow-sm overflow-hidden card-hover">
+            <div class="relative">
+              <img src="https://picsum.photos/id/40/600/400" alt="两只猫咪在沙发上睡觉" class="w-full h-48 object-cover">
+              <button class="absolute top-3 right-3 bg-white/80 hover:bg-white text-gray-600 hover:text-red-500 p-2 rounded-full transition-colors">
+                <i class="fa fa-heart-o"></i>
+              </button>
+            </div>
+            <div class="p-4">
+              <div class="flex items-center mb-3">
+                <img src="https://picsum.photos/id/65/40/40" alt="用户头像" class="w-10 h-10 rounded-full object-cover">
+                <div class="ml-3">
+                  <h3 class="font-medium text-gray-800">张小明</h3>
+                  <p class="text-xs text-gray-500">昨天</p>
+                </div>
+                <button class="ml-auto text-gray-400 hover:text-gray-600">
+                  <i class="fa fa-ellipsis-h"></i>
+                </button>
+              </div>
+              <p class="text-gray-700 mb-3">家里的两只主子又在沙发上相拥而眠了，真是太可爱了！养猫的朋友们，你们的猫也这样吗？</p>
+              <div class="flex items-center justify-between text-sm text-gray-500">
+                <div class="flex space-x-4">
+                  <button class="flex items-center hover:text-primary transition-colors">
+                    <i class="fa fa-heart-o mr-1"></i> 215
+                  </button>
+                  <button class="flex items-center hover:text-primary transition-colors">
+                    <i class="fa fa-comment-o mr-1"></i> 36
+                  </button>
+                  <button class="flex items-center hover:text-primary transition-colors">
+                    <i class="fa fa-share mr-1"></i> 12
+                  </button>
+                </div>
+                <div class="flex space-x-1">
+                  <span class="px-2 py-1 bg-gray-100 text-gray-600 rounded-full text-xs">猫咪</span>
+                  <span class="px-2 py-1 bg-gray-100 text-gray-600 rounded-full text-xs">睡觉</span>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <!-- 动态卡片 3 -->
+          <div class="bg-white rounded-xl shadow-sm overflow-hidden card-hover">
+            <div class="relative">
+              <img src="https://picsum.photos/id/237/600/400" alt="柯基犬在草地上奔跑" class="w-full h-48 object-cover">
+              <button class="absolute top-3 right-3 bg-white/80 hover:bg-white text-gray-600 hover:text-red-500 p-2 rounded-full transition-colors">
+                <i class="fa fa-heart-o"></i>
+              </button>
+            </div>
+            <div class="p-4">
+              <div class="flex items-center mb-3">
+                <img src="https://picsum.photos/id/91/40/40" alt="用户头像" class="w-10 h-10 rounded-full object-cover">
+                <div class="ml-3">
+                  <h3 class="font-medium text-gray-800">王大锤</h3>
+                  <p class="text-xs text-gray-500">3天前</p>
+                </div>
+                <button class="ml-auto text-gray-400 hover:text-gray-600">
+                  <i class="fa fa-ellipsis-h"></i>
+                </button>
+              </div>
+              <p class="text-gray-700 mb-3">带柯基去郊外玩耍，它跑得比我还快！短腿也有大能量啊！大家的柯基都这么活泼吗？</p>
+              <div class="flex items-center justify-between text-sm text-gray-500">
+                <div class="flex space-x-4">
+                  <button class="flex items-center hover:text-primary transition-colors">
+                    <i class="fa fa-heart-o mr-1"></i> 187
+                  </button>
+                  <button class="flex items-center hover:text-primary transition-colors">
+                    <i class="fa fa-comment-o mr-1"></i> 29
+                  </button>
+                  <button class="flex items-center hover:text-primary transition-colors">
+                    <i class="fa fa-share mr-1"></i> 9
+                  </button>
+                </div>
+                <div class="flex space-x-1">
+                  <span class="px-2 py-1 bg-gray-100 text-gray-600 rounded-full text-xs">狗狗</span>
+                  <span class="px-2 py-1 bg-gray-100 text-gray-600 rounded-full text-xs">郊外</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <div class="mt-8 text-center">
+          <button class="bg-white text-primary border border-primary font-medium py-2 px-6 rounded-full hover:bg-primary hover:text-white transition-colors">
+            加载更多 <i class="fa fa-refresh ml-1"></i>
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- 宠物百科 -->
+    <section id="encyclopedia" class="py-16 bg-white">
+      <div class="container mx-auto px-4">
+        <div class="text-center mb-12">
+          <h2 class="text-[clamp(1.5rem,3vw,2rem)] font-bold text-dark mb-4">宠物百科</h2>
+          <p class="text-gray-600 max-w-2xl mx-auto">了解各种宠物的品种、习性、饲养知识和健康护理，成为更专业的宠物主人。</p>
+        </div>
+        
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+          <!-- 百科卡片 1 -->
+          <div class="bg-white rounded-xl shadow-sm overflow-hidden card-hover border border-gray-100">
+            <div class="relative">
+              <img src="https://picsum.photos/id/237/400/300" alt="狗狗百科" class="w-full h-40 object-cover">
+              <div class="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent"></div>
+              <h3 class="absolute bottom-3 left-3 text-white font-bold text-lg">狗狗百科</h3>
+            </div>
+            <div class="p-4">
+              <p class="text-gray-600 text-sm mb-4">了解各种犬类品种的特点、饲养方法、训练技巧和健康护理知识。</p>
+              <div class="flex justify-between items-center">
+                <span class="text-xs text-gray-500">128 个品种</span>
+                <a href="#" class="text-primary hover:text-primary/80 text-sm font-medium">查看全部 <i class="fa fa-arrow-right ml-1"></i></a>
+              </div>
+            </div>
+          </div>
+          
+          <!-- 百科卡片 2 -->
+          <div class="bg-white rounded-xl shadow-sm overflow-hidden card-hover border border-gray-100">
+            <div class="relative">
+              <img src="https://picsum.photos/id/40/400/300" alt="猫咪百科" class="w-full h-40 object-cover">
+              <div class="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent"></div>
+              <h3 class="absolute bottom-3 left-3 text-white font-bold text-lg">猫咪百科</h3>
+            </div>
+            <div class="p-4">
+              <p class="text-gray-600 text-sm mb-4">探索猫咪的品种特征、行为习惯、喂养要点和常见疾病预防知识。</p>
+              <div class="flex justify-between items-center">
+                <span class="text-xs text-gray-500">86 个品种</span>
+                <a href="#" class="text-primary hover:text-primary/80 text-sm font-medium">查看全部 <i class="fa fa-arrow-right ml-1"></i></a>
+              </div>
+            </div>
+          </div>
+          
+          <!-- 百科卡片 3 -->
+          <div class="bg-white rounded-xl shadow-sm overflow-hidden card-hover border border-gray-100">
+            <div class="relative">
+              <img src="https://picsum.photos/id/1059/400/300" alt="小宠百科" class="w-full h-40 object-cover">
+              <div class="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent"></div>
+              <h3 class="absolute bottom-3 left-3 text-white font-bold text-lg">小宠百科</h3>
+            </div>
+            <div class="p-4">
+              <p class="text-gray-600 text-sm mb-4">学习仓鼠、兔子、龙猫等小型宠物的饲养方法、食物选择和居住环境要求。</p>
+              <div class="flex justify-between items-center">
+                <span class="text-xs text-gray-500">42 个品种</span>
+                <a href="#" class="text-primary hover:text-primary/80 text-sm font-medium">查看全部 <i class="fa fa-arrow-right ml-1"></i></a>
+              </div>
+            </div>
+          </div>
+          
+          <!-- 百科卡片 4 -->
+          <div class="bg-white rounded-xl shadow-sm overflow-hidden card-hover border border-gray-100">
+            <div class="relative">
+              <img src="https://picsum.photos/id/1062/400/300" alt="水族百科" class="w-full h-40 object-cover">
+              <div class="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent"></div>
+              <h3 class="absolute bottom-3 left-3 text-white font-bold text-lg">水族百科</h3>
+            </div>
+            <div class="p-4">
+              <p class="text-gray-600 text-sm mb-4">了解热带鱼、冷水鱼、龟类等水族宠物的养殖技巧和水质管理知识。</p>
+              <div class="flex justify-between items-center">
+                <span class="text-xs text-gray-500">57 个品种</span>
+                <a href="#" class="text-primary hover:text-primary/80 text-sm font-medium">查看全部 <i class="fa fa-arrow-right ml-1"></i></a>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <!-- 百科特色内容 -->
+        <div class="mt-16 bg-gray-50 rounded-2xl p-6 md:p-8">
+          <div class="flex flex-col md:flex-row items-center">
+            <div class="md:w-1/2 mb-6 md:mb-0 md:pr-8">
+              <h3 class="text-xl font-bold text-dark mb-4">热门宠物品种推荐</h3>
+              <p class="text-gray-600 mb-6">不知道养什么宠物？看看这些热门宠物品种，找到最适合你的小伙伴。</p>
+              <ul class="space-y-3">
+                <li class="flex items-center">
+                  <div class="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary mr-3">
+                    <i class="fa fa-paw"></i>
+                  </div>
+                  <div>
+                    <h4 class="font-medium text-gray-800">金毛寻回犬</h4>
+                    <p class="text-xs text-gray-500">友善、聪明、活泼，是家庭宠物的理想选择</p>
+                  </div>
+                </li>
+                <li class="flex items-center">
+                  <div class="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary mr-3">
+                    <i class="fa fa-paw"></i>
+                  </div>
+                  <div>
+                    <h4 class="font-medium text-gray-800">英国短毛猫</h4>
+                    <p class="text-xs text-gray-500">安静、独立、适应力强，适合城市生活</p>
+                  </div>
+                </li>
+                <li class="flex items-center">
+                  <div class="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary mr-3">
+                    <i class="fa fa-paw"></i>
+                  </div>
+                  <div>
+                    <h4 class="font-medium text-gray-800">仓鼠</h4>
+                    <p class="text-xs text-gray-500">小巧可爱、易于饲养，适合初次养宠的人</p>
+                  </div>
+                </li>
+              </ul>
+            </div>
+            <div class="md:w-1/2">
+              <div class="bg-white rounded-xl shadow-sm p-4">
+                <h4 class="font-medium text-gray-800 mb-4">宠物品种分布</h4>
+                <div class="h-64">
+                  <canvas id="petChart"></canvas>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 宠物交友 -->
+    <section id="discover" class="py-16 bg-gray-50">
+      <div class="container mx-auto px-4">
+        <div class="text-center mb-12">
+          <h2 class="text-[clamp(1.5rem,3vw,2rem)] font-bold text-dark mb-4">宠物交友</h2>
+          <p class="text-gray-600 max-w-2xl mx-auto">为你的爱宠找到志同道合的小伙伴，让它们的生活更加丰富多彩！</p>
+        </div>
+        
+        <!-- 筛选栏 -->
+        <div class="bg-white rounded-xl shadow-sm p-4 mb-8">
+          <div class="flex flex-wrap gap-4">
+            <div class="flex-1 min-w-[180px]">
+              <label class="block text-sm font-medium text-gray-700 mb-1">宠物类型</label>
+              <select class="w-full rounded-lg border border-gray-200 py-2 px-3 focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary">
+                <option value="">全部类型</option>
+                <option value="dog">狗狗</option>
+                <option value="cat">猫咪</option>
+                <option value="small">小宠</option>
+                <option value="fish">水族</option>
+              </select>
+            </div>
+            <div class="flex-1 min-w-[180px]">
+              <label class="block text-sm font-medium text-gray-700 mb-1">品种</label>
+              <select class="w-full rounded-lg border border-gray-200 py-2 px-3 focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary">
+                <option value="">全部品种</option>
+                <option value="golden">金毛</option>
+                <option value="husky">哈士奇</option>
+                <option value="british">英短</option>
+                <option value="ragdoll">布偶</option>
+              </select>
+            </div>
+            <div class="flex-1 min-w-[180px]">
+              <label class="block text-sm font-medium text-gray-700 mb-1">年龄</label>
+              <select class="w-full rounded-lg border border-gray-200 py-2 px-3 focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary">
+                <option value="">不限</option>
+                <option value="baby">幼年(0-1岁)</option>
+                <option value="young">青年(1-3岁)</option>
+                <option value="adult">成年(3-8岁)</option>
+                <option value="senior">老年(8岁以上)</option>
+              </select>
+            </div>
+            <div class="flex-1 min-w-[180px]">
+              <label class="block text-sm font-medium text-gray-700 mb-1">性别</label>
+              <select class="w-full rounded-lg border border-gray-200 py-2 px-3 focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary">
+                <option value="">不限</option>
+                <option value="male">公</option>
+                <option value="female">母</option>
+              </select>
+            </div>
+            <div class="flex items-end">
+              <button class="bg-primary text-white font-medium py-2 px-6 rounded-lg hover:bg-primary/90 transition-colors">
+                筛选 <i class="fa fa-filter ml-1"></i>
+              </button>
+            </div>
+          </div>
+        </div>
+        
+        <!-- 宠物卡片 -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+          <!-- 宠物卡片 1 -->
+          <div class="bg-white rounded-xl shadow-sm overflow-hidden card-hover">
+            <div class="relative">
+              <img src="https://picsum.photos/id/237/400/400" alt="宠物照片" class="w-full h-48 object-cover">
+              <div class="absolute top-3 right-3">
+                <button class="bg-white/80 hover:bg-white text-gray-600 hover:text-red-500 p-2 rounded-full transition-colors">
+                  <i class="fa fa-heart-o"></i>
+                </button>
+              </div>
+              <div class="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-3">
+                <h3 class="text-white font-bold">小白</h3>
+                <div class="flex items-center text-white/80 text-sm">
+                  <span class="mr-3"><i class="fa fa-venus mr-1"></i> 女</span>
+                  <span><i class="fa fa-birthday-cake mr-1"></i> 2岁</span>
+                </div>
+              </div>
+            </div>
+            <div class="p-4">
+              <div class="flex items-center mb-3">
+                <img src="https://picsum.photos/id/64/32/32" alt="主人头像" class="w-8 h-8 rounded-full object-cover">
+                <span class="ml-2 text-sm font-medium text-gray-700">李小花</span>
+                <span class="ml-2 px-2 py-0.5 bg-primary/10 text-primary text-xs rounded-full">金毛</span>
+              </div>
+              <p class="text-gray-600 text-sm mb-4 line-clamp-2">活泼可爱的金毛，喜欢玩球和游泳，性格友善，很适合交朋友！</p>
+              <div class="flex justify-between items-center">
+                <span class="text-xs text-gray-500"><i class="fa fa-map-marker mr-1"></i> 北京市朝阳区</span>
+                <button class="text-primary hover:text-primary/80 text-sm font-medium">
+                  打招呼 <i class="fa fa-paper-plane ml-1"></i>
+                </button>
+              </div>
+            </div>
+          </div>
+          
+          <!-- 宠物卡片 2 -->
+          <div class="bg-white rounded-xl shadow-sm overflow-hidden card-hover">
+            <div class="relative">
+              <img src="https://picsum.photos/id/40/400/400" alt="宠物照片" class="w-full h-48 object-cover">
+              <div class="absolute top-3 right-3">
+                <button class="bg-white/80 hover:bg-white text-gray-600 hover:text-red-500 p-2 rounded-full transition-colors">
+                  <i class="fa fa-heart-o"></i>
+                </button>
+              </div>
+              <div class="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-3">
+                <h3 class="text-white font-bold">喵喵</h3>
+                <div class="flex items-center text-white/80 text-sm">
+                  <span class="mr-3"><i class="fa fa-mars mr-1"></i> 男</span>
+                  <span><i class="fa fa-birthday-cake mr-1"></i> 1岁</span>
+                </div>
+              </div>
+            </div>
+            <div class="p-4">
+              <div class="flex items-center mb-3">
+                <img src="https://picsum.photos/id/65/32/32" alt="主人头像" class="w-8 h-8 rounded-full object-cover">
+                <span class="ml-2 text-sm font-medium text-gray-700">张小明</span>
+                <span class="ml-2 px-2 py-0.5 bg-primary/10 text-primary text-xs rounded-full">英短</span>
+              </div>
+              <p class="text-gray-600 text-sm mb-4 line-clamp-2">安静温顺的英短猫，喜欢睡觉和晒太阳，偶尔也会玩逗猫棒。</p>
+              <div class="flex justify-between items-center">
+                <span class="text-xs text-gray-500"><i class="fa fa-map-marker mr-1"></i> 上海市徐汇区</span>
+                <button class="text-primary hover:text-primary/80 text-sm font-medium">
+                  打招呼 <i class="fa fa-paper-plane ml-1"></i>
+                </button>
+              </div>
+            </div>
+          </div>
+          
+          <!-- 宠物卡片 3 -->
+          <div class="bg-white rounded-xl shadow-sm overflow-hidden card-hover">
+            <div class="relative">
+              <img src="https://picsum.photos/id/1025/400/400" alt="宠物照片" class="w-full h-48 object-cover">
+              <div class="absolute top-3 right-3">
+                <button class="bg-white/80 hover:bg-white text-gray-600 hover:text-red-500 p-2 rounded-full transition-colors">
+                  <i class="fa fa-heart-o"></i>
+                </button>
+              </div>
+              <div class="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-3">
+                <h3 class="text-white font-bold">小黑</h3>
+                <div class="flex items-center text-white/80 text-sm">
+                  <span class="mr-3"><i class="fa fa-mars mr-1"></i> 男</span>
+                  <span><i class="fa fa-birthday-cake mr-1"></i> 3岁</span>
+                </div>
+              </div>
+            </div>
+            <div class="p-4">
+              <div class="flex items-center mb-3">
+                <img src="https://picsum.photos/id/91/32/32" alt="主人头像" class="w-8 h-8 rounded-full object-cover">
+                <span class="ml-2 text-sm font-medium text-gray-700">王大锤</span>
+                <span class="ml-2 px-2 py-0.5 bg-primary/10 text-primary text-xs rounded-full">柯基</span>
+              </div>
+              <p class="text-gray-600 text-sm mb-4 line-clamp-2">活泼好动的柯基，喜欢追逐玩耍，性格开朗，对人友好。</p>
+              <div class="flex justify-between items-center">
+                <span class="text-xs text-gray-500"><i class="fa fa-map-marker mr-1"></i> 广州市天河区</span>
+                <button class="text-primary hover:text-primary/80 text-sm font-medium">
+                  打招呼 <i class="fa fa-paper-plane ml-1"></i>
+                </button>
+              </div>
+            </div>
+          </div>
+          
+          <!-- 宠物卡片 4 -->
+          <div class="bg-white rounded-xl shadow-sm overflow-hidden card-hover">
+            <div class="relative">
+              <img src="https://picsum.photos/id/1062/400/400" alt="宠物照片" class="w-full h-48 object-cover">
+              <div class="absolute top-3 right-3">
+                <button class="bg-white/80 hover:bg-white text-gray-600 hover:text-red-500 p-2 rounded-full transition-colors">
+                  <i class="fa fa-heart-o"></i>
+                </button>
+              </div>
+              <div class="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-3">
+                <h3 class="text-white font-bold">花花</h3>
+                <div class="flex items-center text-white/80 text-sm">
+                  <span class="mr-3"><i class="fa fa-venus mr-1"></i> 女</span>
+                  <span><i class="fa fa-birthday-cake mr-1"></i> 2岁</span>
+                </div>
+              </div>
+            </div>
+            <div class="p-4">
+              <div class="flex items-center mb-3">
+                <img src="https://picsum.photos/id/1027/32/32" alt="主人头像" class="w-8 h-8 rounded-full object-cover">
+                <span class="ml-2 text-sm font-medium text-gray-700">赵小婷</span>
+                <span class="ml-2 px-2 py-0.5 bg-primary/10 text-primary text-xs rounded-full">布偶</span>
+              </div>
+              <p class="text-gray-600 text-sm mb-4 line-clamp-2">优雅迷人的布偶猫，性格温顺，喜欢被抚摸，非常亲人。</p>
+              <div class="flex justify-between items-center">
+                <span class="text-xs text-gray-500"><i class="fa fa-map-marker mr-1"></i> 深圳市南山区</span>
+                <button class="text-primary hover:text-primary/80 text-sm font-medium">
+                  打招呼 <i class="fa fa-paper-plane ml-1"></i>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <div class="mt-8 text-center">
+          <button class="bg-white text-primary border border-primary font-medium py-2 px-6 rounded-full hover:bg-primary hover:text-white transition-colors">
+            查看更多宠物 <i class="fa fa-angle-double-right ml-1"></i>
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- 社区活动 -->
+    <section id="community" class="py-16 bg-white">
+      <div class="container mx-auto px-4">
+        <div class="text-center mb-12">
+          <h2 class="text-[clamp(1.5rem,3vw,2rem)] font-bold text-dark mb-4">社区活动</h2>
+          <p class="text-gray-600 max-w-2xl mx-auto">参与宠物主题活动，结交更多宠物爱好者，让你和你的爱宠共同度过美好时光！</p>
+        </div>
+        
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+          <!-- 活动卡片 1 -->
+          <div class="bg-white rounded-xl shadow-sm overflow-hidden card-hover border border-gray-100">
+            <div class="flex flex-col md:flex-row">
+              <div class="md:w-2/5 relative">
+                <img src="https://picsum.photos/id/1059/400/600" alt="宠物活动照片" class="w-full h-48 md:h-full object-cover">
+                <div class="absolute top-3 left-3 bg-primary text-white text-xs font-bold px-3 py-1 rounded-full">
+                  热门
+                </div>
+              </div>
+              <div class="md:w-3/5 p-6">
+                <div class="flex justify-between items-start mb-3">
+                  <h3 class="text-lg font-bold text-gray-800">宠物嘉年华</h3>
+                  <span class="bg-green-100 text-green-800 text-xs font-medium px-2.5 py-0.5 rounded-full">
+                    进行中
+                  </span>
+                </div>
+                <p class="text-gray-600 text-sm mb-4">一场专为宠物和主人打造的欢乐盛宴，有各种宠物游戏、表演和互动活动，还有专业的宠物用品展览。</p>
+                <div class="space-y-2 mb-4">
+                  <div class="flex items-center text-sm text-gray-500">
+                    <i class="fa fa-calendar mr-2 w-4 text-center"></i>
+                    <span>2025年6月28日 - 6月30日</span>
+                  </div>
+                  <div class="flex items-center text-sm text-gray-500">
+                    <i class="fa fa-map-marker mr-2 w-4 text-center"></i>
+                    <span>北京市朝阳区奥林匹克公园</span>
+                  </div>
+                  <div class="flex items-center text-sm text-gray-500">
+                    <i class="fa fa-users mr-2 w-4 text-center"></i>
+                    <span>已报名: 238人</span>
+                  </div>
+                </div>
+                <button class="w-full bg-primary text-white font-medium py-2 rounded-lg hover:bg-primary/90 transition-colors">
+                  立即报名
+                </button>
+              </div>
+            </div>
+          </div>
+          
+          <!-- 活动卡片 2 -->
+          <div class="bg-white rounded-xl shadow-sm overflow-hidden card-hover border border-gray-100">
+            <div class="flex flex-col md:flex-row">
+              <div class="md:w-2/5 relative">
+                <img src="https://picsum.photos/id/1062/400/600" alt="宠物活动照片" class="w-full h-48 md:h-full object-cover">
+              </div>
+              <div class="md:w-3/5 p-6">
+                <div class="flex justify-between items-start mb-3">
+                  <h3 class="text-lg font-bold text-gray-800">宠物领养日</h3>
+                  <span class="bg-blue-100 text-blue-800 text-xs font-medium px-2.5 py-0.5 rounded-full">
+                    即将开始
+                  </span>
+                </div>
+                <p class="text-gray-600 text-sm mb-4">为流浪宠物提供一个温暖的家，现场有专业人员进行领养指导，还有宠物健康检查和疫苗接种服务。</p>
+                <div class="space-y-2 mb-4">
+                  <div class="flex items-center text-sm text-gray-500">
+                    <i class="fa fa-calendar mr-2 w-4 text-center"></i>
+                    <span>2025年7月10日 - 7月11日</span>
+                  </div>
+                  <div class="flex items-center text-sm text-gray-500">
+                    <i class="fa fa-map-marker mr-2 w-4 text-center"></i>
+                    <span>上海市浦东新区世纪公园</span>
+                  </div>
+                  <div class="flex items-center text-sm text-gray-500">
+                    <i class="fa fa-users mr-2 w-4 text-center"></i>
+                    <span>已报名: 156人</span>
+                  </div>
+                </div>
+                <button class="w-full bg-primary text-white font-medium py-2 rounded-lg hover:bg-primary/90 transition-colors">
+                  立即报名
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <!-- 即将举行的活动 -->
+        <div class="mt-12">
+          <h3 class="text-xl font-bold text-gray-800 mb-6">即将举行的活动</h3>
+          <div class="space-y-4">
+            <!-- 活动列表项 1 -->
+            <div class="bg-white rounded-lg shadow-sm p-4 hover:shadow-md transition-shadow">
+              <div class="flex items-center">
+                <div class="bg-primary/10 rounded-lg p-3 text-center mr-4">
+                  <div class="text-primary font-bold text-xl">15</div>
+                  <div class="text-primary text-sm">七月</div>
+                </div>
+                <div class="flex-1">
+                  <h4 class="font-medium text-gray-800">宠物训练工作坊</h4>
+                  <p class="text-sm text-gray-600">学习基础的宠物训练技巧，解决宠物行为问题</p>
+                  <div class="flex items-center mt-2 text-xs text-gray-500">
+                    <span class="flex items-center mr-4"><i class="fa fa-clock-o mr-1"></i> 10:00-12:00</span>
+                    <span class="flex items-center mr-4"><i class="fa fa-map-marker mr-1"></i> 广州市天河区</span>
+                    <span class="flex items-center"><i class="fa fa-users mr-1"></i> 50人</span>
+                  </div>
+                </div>
+                <button class="text-primary hover:text-primary/80 text-sm font-medium">
+                  查看详情
+                </button>
+              </div>
+            </div>
+            
+            <!-- 活动列表项 2 -->
+            <div class="bg-white rounded-lg shadow-sm p-4 hover:shadow-md transition-shadow">
+              <div class="flex items-center">
+                <div class="bg-primary/10 rounded-lg p-3 text-center mr-4">
+                  <div class="text-primary font-bold text-xl">22</div>
+                  <div class="text-primary text-sm">七月</div>
+                </div>
+                <div class="flex-1">
+                  <h4 class="font-medium text-gray-800">宠物健康讲座</h4>
+                  <p class="text-sm text-gray-600">宠物常见疾病预防与护理，专业兽医现场解答</p>
+                  <div class="flex items-center mt-2 text-xs text-gray-500">
+                    <span class="flex items-center mr-4"><i class="fa fa-clock-o mr-1"></i> 14:00-16:00</span>
+                    <span class="flex items-center mr-4"><i class="fa fa-map-marker mr-1"></i> 深圳市南山区</span>
+                    <span class="flex items-center"><i class="fa fa-users mr-1"></i> 30人</span>
+                  </div>
+                </div>
+                <button class="text-primary hover:text-primary/80 text-sm font-medium">
+                  查看详情
+                </button>
+              </div>
+            </div>
+            
+            <!-- 活动列表项 3 -->
+            <div class="bg-white rounded-lg shadow-sm p-4 hover:shadow-md transition-shadow">
+              <div class="flex items-center">
+                <div class="bg-primary/10 rounded-lg p-3 text-center mr-4">
+                  <div class="text-primary font-bold text-xl">29</div>
+                  <div class="text-primary text-sm">七月</div>
+                </div>
+                <div class="flex-1">
+                  <h4 class="font-medium text-gray-800">宠物摄影比赛</h4>
+                  <p class="text-sm text-gray-600">展示你宠物的可爱瞬间，赢取丰厚奖品</p>
+                  <div class="flex items-center mt-2 text-xs text-gray-500">
+                    <span class="flex items-center mr-4"><i class="fa fa-clock-o mr-1"></i> 全天</span>
+                    <span class="flex items-center mr-4"><i class="fa fa-map-marker mr-1"></i> 成都市锦江区</span>
+                    <span class="flex items-center"><i class="fa fa-users mr-1"></i> 不限</span>
+                  </div>
+                </div>
+                <button class="text-primary hover:text-primary/80 text-sm font-medium">
+                  查看详情
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 加入我们 -->
+    <section id="join" class="py-16 bg-primary/5">
+      <div class="container mx-auto px-4">
+        <div class="bg-white rounded-2xl shadow-lg overflow-hidden">
+          <div class="grid grid-cols-1 md:grid-cols-2">
+            <div class="p-8 md:p-12 flex flex-col justify-center">
+              <h2 class="text-[clamp(1.5rem,3vw,2rem)] font-bold text-dark mb-4">加入我们的宠物社区</h2>
+              <p class="text-gray-600 mb-6">与其他宠物主人分享经验，为你的爱宠找到新朋友，一起创造美好的回忆！</p>
+              
+              <form class="space-y-4">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">姓名</label>
+                    <input type="text" class="w-full rounded-lg border border-gray-200 py-2 px-3 focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary" placeholder="请输入您的姓名">
+                  </div>
+                  <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">手机号码</label>
+                    <input type="tel" class="w-full rounded-lg border border-gray-200 py-2 px-3 focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary" placeholder="请输入您的手机号码">
+                  </div>
+                </div>
+                
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-1">电子邮箱</label>
+                  <input type="email" class="w-full rounded-lg border border-gray-200 py-2 px-3 focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary" placeholder="请输入您的电子邮箱">
+                </div>
+                
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-1">宠物信息</label>
+                  <select class="w-full rounded-lg border border-gray-200 py-2 px-3 focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary">
+                    <option value="">请选择宠物类型</option>
+                    <option value="dog">狗狗</option>
+                    <option value="cat">猫咪</option>
+                    <option value="small">小宠</option>
+                    <option value="fish">水族</option>
+                    <option value="other">其他</option>
+                  </select>
+                </div>
+                
+                <div>
+                  <label class="flex items-center">
+                    <input type="checkbox" class="h-4 w-4 text-primary focus:ring-primary border-gray-300 rounded">
+                    <span class="ml-2 text-sm text-gray-600">我同意接收宠物相关的活动和优惠信息</span>
+                  </label>
+                </div>
+                
+                <button type="submit" class="w-full bg-primary text-white font-medium py-3 rounded-lg hover:bg-primary/90 transition-colors">
+                  立即注册
+                </button>
+              </form>
+              
+              <p class="text-xs text-gray-500 mt-4 text-center">
+                点击"立即注册"，即表示您同意我们的<a href="#" class="text-primary hover:underline">服务条款</a>和<a href="#" class="text-primary hover:underline">隐私政策</a>
+              </p>
+            </div>
+            
+            <div class="hidden md:block relative">
+              <img src="https://picsum.photos/id/1025/800/1000" alt="宠物和主人的快乐时光" class="absolute inset-0 w-full h-full object-cover">
+              <div class="absolute inset-0 bg-gradient-to-r from-primary/80 to-accent/80 flex items-center justify-center">
+                <div class="text-white text-center p-8">
+                  <i class="fa fa-paw text-6xl mb-6"></i>
+                  <h3 class="text-2xl font-bold mb-4">已有超过10,000+宠物主人加入</h3>
+                  <p class="mb-6">分享、交流、互动，让宠物生活更精彩</p>
+                  <div class="flex justify-center space-x-4">
+                    <div class="text-center">
+                      <div class="text-3xl font-bold">5,000+</div>
+                      <div class="text-sm">活跃用户</div>
+                    </div>
+                    <div class="text-center">
+                      <div class="text-3xl font-bold">3,000+</div>
+                      <div class="text-sm">宠物档案</div>
+                    </div>
+                    <div class="text-center">
+                      <div class="text-3xl font-bold">200+</div>
+                      <div class="text-sm">线下活动</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- 底部导航栏（移动端） -->
+  <nav class="fixed bottom-0 left-0 right-0 bg-white shadow-[0_-1px_3px_rgba(0,0,0,0.1)] md:hidden z-40">
+    <div class="flex justify-around items-center h-16">
+      <a href="#home" class="flex flex-col items-center justify-center text-primary">
+        <i class="fa fa-home text-xl"></i>
+        <span class="text-xs mt-1">首页</span>
+      </a>
+      <a href="#discover" class="flex flex-col items-center justify-center text-gray-500 hover:text-primary transition-colors">
+        <i class="fa fa-compass text-xl"></i>
+        <span class="text-xs mt-1">发现</span>
+      </a>
+      <a href="#" class="flex items-center justify-center w-14 h-14 bg-primary rounded-full -mt-5 shadow-lg">
+        <i class="fa fa-plus text-white text-xl"></i>
+      </a>
+      <a href="#encyclopedia" class="flex flex-col items-center justify-center text-gray-500 hover:text-primary transition-colors">
+        <i class="fa fa-book text-xl"></i>
+        <span class="text-xs mt-1">百科</span>
+      </a>
+      <a href="#profile" class="flex flex-col items-center justify-center text-gray-500 hover:text-primary transition-colors">
+        <i class="fa fa-user text-xl"></i>
+        <span class="text-xs mt-1">我的</span>
+      </a>
+    </div>
+  </nav>
+
+  <!-- 页脚 -->
+  <footer class="bg-dark text-white py-12">
+    <div class="container mx-auto px-4">
+      <div class="grid grid-cols-1 md:grid-cols-4 gap-8">
+        <div>
+          <div class="flex items-center mb-4">
+            <i class="fa fa-paw text-primary text-2xl mr-2"></i>
+            <span class="text-xl font-bold">PetPals</span>
+          </div>
+          <p class="text-gray-400 mb-4">连接宠物爱好者，分享宠物生活，探索宠物世界。</p>
+          <div class="flex space-x-4">
+            <a href="#" class="text-gray-400 hover:text-primary transition-colors">
+              <i class="fa fa-weixin text-xl"></i>
+            </a>
+            <a href="#" class="text-gray-400 hover:text-primary transition-colors">
+              <i class="fa fa-weibo text-xl"></i>
+            </a>
+            <a href="#" class="text-gray-400 hover:text-primary transition-colors">
+              <i class="fa fa-instagram text-xl"></i>
+            </a>
+            <a href="#" class="text-gray-400 hover:text-primary transition-colors">
+              <i class="fa fa-youtube-play text-xl"></i>
+            </a>
+          </div>
+        </div>
+        
+        <div>
+          <h3 class="text-lg font-medium mb-4">快速链接</h3>
+          <ul class="space-y-2">
+            <li><a href="#home" class="text-gray-400 hover:text-primary transition-colors">首页</a></li>
+            <li><a href="#discover" class="text-gray-400 hover:text-primary transition-colors">发现宠物</a></li>
+            <li><a href="#encyclopedia" class="text-gray-400 hover:text-primary transition-colors">宠物百科</a></li>
+            <li><a href="#community" class="text-gray-400 hover:text-primary transition-colors">社区活动</a></li>
+            <li><a href="#join" class="text-gray-400 hover:text-primary transition-colors">加入我们</a></li>
+          </ul>
+        </div>
+        
+        <div>
+          <h3 class="text-lg font-medium mb-4">支持</h3>
+          <ul class="space-y-2">
+            <li><a href="#" class="text-gray-400 hover:text-primary transition-colors">帮助中心</a></li>
+            <li><a href="#" class="text-gray-400 hover:text-primary transition-colors">常见问题</a></li>
+            <li><a href="#" class="text-gray-400 hover:text-primary transition-colors">联系我们</a></li>
+            <li><a href="#" class="text-gray-400 hover:text-primary transition-colors">隐私政策</a></li>
+            <li><a href="#" class="text-gray-400 hover:text-primary transition-colors">服务条款</a></li>
+          </ul>
+        </div>
+        
+        <div>
+          <h3 class="text-lg font-medium mb-4">联系我们</h3>
+          <ul class="space-y-2">
+            <li class="flex items-start">
+              <i class="fa fa-map-marker mt-1 mr-3 text-primary"></i>
+              <span class="text-gray-400">北京市朝阳区建国路88号</span>
+            </li>
+            <li class="flex items-center">
+              <i class="fa fa-phone mr-3 text-primary"></i>
+              <span class="text-gray-400">400-123-4567</span>
+            </li>
+            <li class="flex items-center">
+              <i class="fa fa-envelope mr-3 text-primary"></i>
+              <span class="text-gray-400">contact@petpals.com</span>
+            </li>
+          </ul>
+        </div>
+      </div>
+      
+      <div class="border-t border-gray-800 mt-8 pt-8 text-center text-gray-500 text-sm">
+        <p>© 2025 PetPals. 保留所有权利。</p>
+      </div>
+    </div>
+  </footer>
+
+  <!-- JavaScript -->
+  <script>
+    // 导航栏滚动效果
+    const header = document.getElementById('mainHeader');
+    window.addEventListener('scroll', () => {
+      if (window.scrollY > 10) {
+        header.classList.add('shadow-md');
+        header.classList.add('bg-white/95');
+        header.classList.remove('bg-white');
+      } else {
+        header.classList.remove('shadow-md');
+        header.classList.remove('bg-white/95');
+        header.classList.add('bg-white');
+      }
+    });
+    
+    // 移动端菜单切换
+    const mobileMenuBtn = document.getElementById('mobileMenuBtn');
+    const mobileMenu = document.getElementById('mobileMenu');
+    const mobileSearch = document.getElementById('mobileSearch');
+    
+    mobileMenuBtn.addEventListener('click', () => {
+      if (mobileMenu.classList.contains('max-h-0')) {
+        mobileMenu.classList.remove('max-h-0', 'opacity-0');
+        mobileMenu.classList.add('max-h-96', 'opacity-100');
+        mobileSearch.classList.add('hidden');
+      } else {
+        mobileMenu.classList.add('max-h-0', 'opacity-0');
+        mobileMenu.classList.remove('max-h-96', 'opacity-100');
+      }
+    });
+    
+    // 搜索栏切换
+    const searchIcon = document.querySelector('.fa-search');
+    if (searchIcon && searchIcon.parentElement) {
+      searchIcon.parentElement.addEventListener('click', () => {
+        if (mobileSearch.classList.contains('hidden')) {
+          mobileSearch.classList.remove('hidden');
+          mobileMenu.classList.add('max-h-0', 'opacity-0');
+          mobileMenu.classList.remove('max-h-96', 'opacity-100');
+        } else {
+          mobileSearch.classList.add('hidden');
+        }
+      });
+    }
+    
+    // 宠物品种图表
+    const ctx = document.getElementById('petChart');
+    if (ctx) {
+      new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+          labels: ['狗狗', '猫咪', '小宠', '水族', '其他'],
+          datasets: [{
+            data: [45, 30, 12, 8, 5],
+            backgroundColor: [
+              '#4CAF50',
+              '#FF9800',
+              '#2196F3',
+              '#9C27B0',
+              '#607D8B'
+            ],
+            borderWidth: 0
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: {
+              position: 'bottom',
+              labels: {
+                padding: 20,
+                usePointStyle: true,
+                pointStyle: 'circle'
+              }
+            }
+          },
+          cutout: '70%'
+        }
+      });
+    }
+    
+    // 平滑滚动
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+      anchor.addEventListener('click', function (e) {
+        e.preventDefault();
+        
+        const targetId = this.getAttribute('href');
+        const targetElement = document.querySelector(targetId);
+        
+        if (targetElement) {
+          window.scrollTo({
+            top: targetElement.offsetTop - 80,
+            behavior: 'smooth'
+          });
+          
+          // 关闭移动端菜单
+          if (!mobileMenu.classList.contains('max-h-0')) {
+            mobileMenu.classList.add('max-h-0', 'opacity-0');
+            mobileMenu.classList.remove('max-h-96', 'opacity-100');
+          }
+        }
+      });
+    });
+  </script>
+</body>
+</html>
+    
